@@ -1,5 +1,4 @@
 /**
- *
  * @param rows
  * @param columns
  * @param mines
@@ -13,9 +12,10 @@ export default function generateGrid(rows, columns, mines) {
     grid[r] = [];
     for (let c = 0; c < columns; c++) {
       grid[r][c] = {
-        id: `${r}${c}`,
+        id: `${r},${c}`,
         risk: 0,
-        revealed: false
+        revealed: false,
+        skip: false
       };
     }
   }

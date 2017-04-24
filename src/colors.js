@@ -1,6 +1,6 @@
 export default {
   cell: {
-    revealed: '#ccc',
-    hidden: '#eee'
+    hidden: '#ccc',
+    revealed: '#eee'
   }
 };
