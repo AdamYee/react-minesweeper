@@ -2,10 +2,11 @@
  * @param rows
  * @param columns
  * @param mines
- * @return {Array}
+ * @return {{grid: Array, mineArr: Array}}
  */
 export default function generateGrid(rows, columns, mines) {
   const grid = [];
+  const mineArr = [];
 
   // Generate grid of empty Cell Objects
   for (let r = 0; r < rows; r++) {
@@ -15,7 +16,7 @@ export default function generateGrid(rows, columns, mines) {
         id: `${r},${c}`,
         risk: 0,
         revealed: false,
-        skip: false
+        flagged: false
       };
     }
   }
@@ -29,6 +30,7 @@ export default function generateGrid(rows, columns, mines) {
       continue;
     }
     grid[r][c].mine = true;
+    mineArr.push(`${r},${c}`);
 
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
@@ -40,5 +42,5 @@ export default function generateGrid(rows, columns, mines) {
     }
   }
 
-  return grid;
+  return { grid, mineArr };
 }

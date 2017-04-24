@@ -4,110 +4,96 @@ import './App.css';
 import Cell from './Cell';
 import generateGrid from './generate-grid';
 
-// function cloneGrid(grid) {
-//   const clone = [];
-//   grid.forEach(row => {
-//     clone[row] = [...grid[row]];
-//   });
-//   return clone;
-// }
-
 class App extends Component {
   constructor(props) {
     super(props);
-    this.rows = 15;
-    this.columns = 15;
-    this.mines = 0;
-    this.state = {
-      grid: generateGrid(this.rows, this.columns, this.mines)
-    };
-    this.cellClickHandler = this.cellClickHandler.bind(this);
-    this.revealNeighbors = this.revealNeighbors.bind(this);
-    this.propagate = this.propagate.bind(this);
-    this.updateCell = this.updateCell.bind(this);
-    this.areNeighborsRevealed = this.areNeighborsRevealed.bind(this);
+    this.rows = 10;
+    this.columns = 10;
+    this.mines = 10;
+    this.state = generateGrid(this.rows, this.columns, this.mines);
+    this.clickCellHandler = this.clickCellHandler.bind(this);
+    this.flagCellHandler = this.flagCellHandler.bind(this);
+    this.reveal = this.reveal.bind(this);
+    this.explode = this.explode.bind(this);
   }
 
   componentDidMount() {
-    // this.node.addEventListener('webkitAnimationEnd', propagate);
     this.node.addEventListener('animationend', this.propagate);
   }
 
-  updateCell(id, props) {
-    const [ row, column ] = id.split(',');
-    this.setState(prevState => {
-      prevState.grid[row][column] = {
-        ...prevState.grid[row][column],
-        ...props
-      };
-      return {
-        grid: prevState.grid
-      };
-    });
+  clickCellHandler(e) {
+    const [ r, c ] = e.currentTarget.id.split(',').map(i => parseInt(i, 10));
+    const cell = this.state.grid[r][c];
+    if (cell.flagged) return;
+    if (cell.mine) {
+      this.explode();
+    } else {
+      this.setState(prevState => ({
+        grid: this.reveal(prevState.grid, r, c)
+      }));
+    }
   }
 
-  areNeighborsRevealed(row, column) {
+  flagCellHandler(e) {
+    e.preventDefault();
+    const [ r, c ] = e.currentTarget.id.split(',').map(i => parseInt(i, 10));
+    const cell = this.state.grid[r][c];
+    const flagged = !cell.flagged;
+    if (!cell.revealed) {
+      this.setState(prevState => {
+        prevState.grid[r][c] = {
+          ...prevState.grid[r][c],
+          flagged
+        };
+        return {
+          grid: prevState.grid
+        }
+      });
+    }
+  }
+
+  explode() {
+    const { grid } = this.state;
+    this.state.mineArr.forEach(mineId => {
+      const [ r, c ] = mineId.split(',').map(i => parseInt(i, 10));
+      const cell = grid[r][c];
+      if (!cell.flagged) {
+        grid[r][c] = { ...cell, revealed: true };
+      }
+    });
+    this.setState(() => ({ grid }));
+  }
+
+  reveal(grid, row, column) {
+    // single cell
+    if (grid[row][column].risk > 0) {
+      grid[row][column] = {
+        ...grid[row][column],
+        revealed: true
+      };
+      return grid;
+    }
+    // multiple cells
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
         const r = row + i;
         const c = column + j;
-        // const id = `${r},${c}`;
         const isInsideGrid = (r >= 0 && c >= 0 && r < this.rows && c < this.columns);
-        if (isInsideGrid && !this.state.grid[r][c].revealed) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  propagate(e) {
-    const { animationName, target } = e;
-    if (animationName === 'ripple') {
-      const [ r, c ] = target.id.split(',').map(i => parseInt(i, 10));
-      const cell = this.state.grid[r][c];
-      if (!cell.mine) {
-        if (cell.risk === 0 && !this.areNeighborsRevealed(r, c)) {
-          this.revealNeighbors(r, c);
-        } else {
-          console.log('check-win');
-        }
-      }
-    }
-  }
-
-  cellClickHandler(e) {
-    const { id } = e.target;
-    this.updateCell(id, { revealed: true});
-    const [ r, c ] = id.split(',').map(i => parseInt(i, 10));
-    this.revealNeighbors(r, c);
-  }
-
-  /**
-   * @param {number} row
-   * @param {number} column
-   */
-  revealNeighbors(row, column) {
-    // console.log('reveal-neighbors', row, column);
-    this.setState(prevState => {
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-          const r = row + i;
-          const c = column + j;
-          // const id = `${r},${c}`;
-          const isInsideGrid = (r >= 0 && c >= 0 && r < this.rows && c < this.columns);
-          if (isInsideGrid) {
-            prevState.grid[r][c] = {
-              ...prevState.grid[r][c],
-              revealed: true
+        if (isInsideGrid) {
+          const cell = grid[r][c];
+          if (!cell.revealed && !cell.mine) {
+            grid[r][c] = {
+              ...cell,
+              revealed: !cell.flagged
             };
+            if (cell.risk === 0 && !cell.flagged) {
+              grid = this.reveal(grid, r, c);
+            }
           }
         }
       }
-      return {
-        grid: prevState.grid
-      }
-    });
+    }
+    return grid;
   }
 
   render() {
@@ -125,8 +111,9 @@ class App extends Component {
           row.map(cell =>
             <Cell
               cell={cell}
-              onCellClick={this.cellClickHandler}
-              onReveal={this.revealNeighbors}
+              onCellClick={this.clickCellHandler}
+              onReveal={this.reveal}
+              onFlag={this.flagCellHandler}
             />
           )
         )}

@@ -7,22 +7,21 @@ export default class Cell extends Component {
   static propTypes = {
     cell: PropTypes.object,
     onCellClick: PropTypes.func,
-    onReveal: PropTypes.func
+    onReveal: PropTypes.func,
+    onFlag: PropTypes.func
   }
 
   constructor(props) {
     super(props);
     this.cellDisplayValue = this.cellDisplayValue.bind(this);
     this.animationClass = this.animationClass.bind(this);
+    this.textColor = this.textColor.bind(this);
   }
-
-  // componentDidUpdate() {
-  //   console.log(this.props.cell.id);
-  // }
 
   shouldComponentUpdate(nextProps) {
     return (
-      this.props.cell.revealed !== nextProps.cell.revealed
+      this.props.cell.revealed !== nextProps.cell.revealed ||
+      this.props.cell.flagged !== nextProps.cell.flagged
     );
   }
 
@@ -48,12 +47,31 @@ export default class Cell extends Component {
     return 'revealed';
   }
 
+  textColor() {
+    const { cell } = this.props;
+    if(cell.mine) {
+      return '#000';
+    }
+    switch(cell.risk) {
+      case 1: return 'blue';
+      case 2: return 'green';
+      case 3: return 'red';
+      case 4: return 'purple';
+      case 5: return 'maroon';
+      case 6: return 'turquoise';
+      case 7: return 'black';
+      case 8: return 'grey';
+      default: return '';
+    }
+  }
+
   render() {
-    const { cell, onCellClick } = this.props;
+    const { cell } = this.props;
     const cellStyle = {
       backgroundColor: cell.revealed ?
         colors.cell.revealed :
-        colors.cell.hidden
+        colors.cell.hidden,
+      color: this.textColor()
     };
     return (
       <div
@@ -62,9 +80,14 @@ export default class Cell extends Component {
         id={cell.id}
         className={`cell ${this.animationClass()}`}
         style={cellStyle}
-        onClick={onCellClick}
+        onClick={this.props.onCellClick}
+        onContextMenu={this.props.onFlag}
       >
         {this.cellDisplayValue()}
+        {
+          cell.flagged &&
+          <span className={cell.flagged ? 'flagged drop-flag' : 'pickup-flag'}>F</span>
+        }
       </div>
     );
   }

@@ -28,8 +28,8 @@ body {
 
 .revealed {
   background-color: #eee;
-  -webkit-animation: ripple 50ms, fade 200ms;
-  animation: ripple 50ms, fade 200ms;
+  -webkit-animation: fade 200ms;
+  animation: fade 200ms;
 }
 .explode {
   background-color: #eee;
@@ -38,10 +38,10 @@ body {
 }
 .flagged {
   z-index: 99;
+  color: hotpink;
   background: #000;
   width: 12px;
   text-align: center;
-  position: absolute;
   top: 7px;
   left: 9px;
 }
