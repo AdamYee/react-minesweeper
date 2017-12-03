@@ -1,34 +1,33 @@
 import React, { Component } from 'react';
-import PropTypes from 'proptypes';
+import PropTypes from 'prop-types';
 import colors from './colors';
 
 export default class Cell extends Component {
 
   static propTypes = {
     cell: PropTypes.object,
-    onCellClick: PropTypes.func,
-    onReveal: PropTypes.func
+    onCellClick: PropTypes.func
   }
 
-  constructor(props) {
-    super(props);
-    this.cellDisplayValue = this.cellDisplayValue.bind(this);
-    this.animationClass = this.animationClass.bind(this);
+  state = {
+    isRevealed: false
   }
 
-  // componentDidUpdate() {
-  //   console.log(this.props.cell.id);
-  // }
-
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps, nextState) {
     return (
-      this.props.cell.revealed !== nextProps.cell.revealed
+      this.state.isRevealed !== nextState.isRevealed
     );
   }
 
-  cellDisplayValue() {
+  reveal = () => {
+    this.setState(() => ({
+      isRevealed: true
+    }));
+  }
+
+  cellDisplayValue = () => {
     const { cell } = this.props;
-    if (!cell.revealed) return;
+    if (!this.state.isRevealed) return;
     if (cell.mine) {
       return '💣';
     }
@@ -37,9 +36,9 @@ export default class Cell extends Component {
     }
   }
 
-  animationClass() {
+  animationClass = () => {
     const { cell } = this.props;
-    if (!cell.revealed) {
+    if (!this.state.isRevealed) {
       return '';
     }
     else if (cell.mine) {
@@ -51,7 +50,7 @@ export default class Cell extends Component {
   render() {
     const { cell, onCellClick } = this.props;
     const cellStyle = {
-      backgroundColor: cell.revealed ?
+      backgroundColor: this.state.isRevealed ?
         colors.cell.revealed :
         colors.cell.hidden
     };
